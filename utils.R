@@ -18,7 +18,7 @@ cond_means_tbl <- function(x){
   nm_cols <- merge(lvl_1, lvl_2, all = TRUE)
   m <- x %>% 
     matrix(dims[1], dims[2]*dims[3])
-  colnames(m) <- str_c(nm_cols$x, nm_cols$y)
+  colnames(m) <- str_c(nm_cols$x, "_", nm_cols$y)
   return(as_tibble(m))
 }
 
@@ -32,11 +32,15 @@ sample_y <- function(ms, n_per_cond, n_expt){
   n_cond <- n_trials_tot / n_per_cond
   l_tbl_i %>% 
     reduce(rbind) %>%
-    mutate(n_expt = n_expt,
-           i = rep(i, each = n_trials_tot),
-           trial = rep(1:n_trials_tot, N),
-           x1 = str_extract(Condition, "^."),
-           x2 = str_extract(Condition, ".$")) %>%
+    mutate(
+      n_expt = n_expt,
+      i = rep(i, each = n_trials_tot),
+      trial = rep(1:n_trials_tot, N),
+      x1 = str_extract(Condition, "^(.+)_"),
+      x1 = str_replace(x1, "_", ""),
+      x2 = str_extract(Condition, "_(.+)$"),
+      x2 = str_replace(x2, "_", "")
+    ) %>%
     select(n_expt, i, trial, x1, x2, y)
 }
 
@@ -150,3 +154,12 @@ compare_models_bf <- function(tbl, agg){
   return (exp(m_comp@bayesFactor$bf))
 }
 
+
+run_experiments <- function(l, tbl_design){
+  l_tbl_y <- simulate_y(tbl_design)
+  l_bfs <- map(l_tbl_y, compare_models_bf, agg = TRUE)
+  tbl_results <- tbl_design %>%
+    select(-n_expt)
+  tbl_results$bf <- as_vector(l_bfs)
+  return(tbl_results)
+}
