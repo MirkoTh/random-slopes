@@ -99,8 +99,8 @@ simulate_y <- function(df_design){
 }
 
 
-aggregate_i <- function(x){
-  x %>%
+aggregate_i <- function(x, f = FALSE){
+  out <- x %>%
     group_by(i, x1, x2) %>%
     summarize(
       n_trials = length(y),
@@ -108,6 +108,10 @@ aggregate_i <- function(x){
       y_sem_i = sd(y)/sqrt(n_trials)
     ) %>%
     ungroup()
+  if (f == TRUE){
+    out$i <- as.factor(out$i)
+  }
+  return(out)
 }
 
 
@@ -122,3 +126,27 @@ aggregate_cond <- function(x_agg_i){
     ungroup() %>%
     mutate(i = max(x_agg_i$i) + 1)
 }
+
+
+compare_models_bf <- function(tbl, agg){
+  if (agg){
+    tbl <- aggregate_i(tbl, f = TRUE)
+    names(tbl) <- c("i", "x1", "x2", "n_trials", "y", "y_sem")
+  } else {
+    tbl <- tbl %>% select(i, x1, x2, y)
+    tbl$i <- as.factor(tbl$i)
+  }
+  m_bf_eff <- lmBF(
+    formula = y ~ x1 + x2 + i + i:x2, 
+    data = tbl %>% as.data.frame(),
+    whichRandom = "i"
+  )
+  m_bf_no_eff <- lmBF(
+    formula = y ~ x2 + i + i:x2, 
+    data = tbl %>% as.data.frame(),
+    whichRandom = "i"
+  )
+  m_comp <- m_bf_eff / m_bf_no_eff
+  return (exp(m_comp@bayesFactor$bf))
+}
+
