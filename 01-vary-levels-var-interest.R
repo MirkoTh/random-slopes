@@ -18,24 +18,20 @@ sd <- 1
 sigma <- c(.1, .25)
 
 df_design <- crossing(N, n, intercept, n_levels_1, n_levels_2, es_1, es_2, sigma)
+df_design$n_expt <- 1:nrow(df_design)
 
 # Simulate Data -----------------------------------------------------------
+l_tbl_y <- simulate_y(df_design)
 
-b1 <- df_design[, c("N", "es_1", "sigma")] %>% 
-  rename(c("n" = "N", "mean" = "es_1", "sd" = "sigma")) %>%
-  pmap(rnorm)
-b2 <- df_design[, c("N", "es_2", "sigma")] %>%
-  rename(c("n" = "N", "mean" = "es_2", "sd" = "sigma")) %>%
-  pmap(rnorm)
-mu <- df_design[, c("N", "intercept", "sd" = "sigma")] %>%
-  rename(c("n" = "N", "mean" = "intercept", "sd" = "sigma")) %>%
-  pmap(rnorm)
-m_cond <- pmap(list(
-  mu, b1, b2, df_design$n_levels_1, df_design$n_levels_2
-  ), .f=condition_means)
-y <- map(m_cond, rnorm, sd = sd)
-
+# check simulated data visually
+suppressMessages(map(l_tbl_y, plot_results))
 
 # Apply Models ------------------------------------------------------------
+
+
+
+
+
+
 
 
