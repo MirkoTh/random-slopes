@@ -52,23 +52,8 @@ sample_entity <- function(ms, n){
 
 plot_results <- function(x){
   n_expt <- x$n_expt[1]
-  x_agg_i <- x %>%
-    group_by(i, x1, x2) %>%
-    summarize(
-      n_trials = length(y),
-      y_mn_i = mean(y),
-      y_sem_i = sd(y)/sqrt(n_trials)
-    ) %>%
-    ungroup()
-  x_agg_cond <- x_agg_i %>%
-    group_by(x1, x2) %>%
-    summarize(
-      N = length(unique(i)),
-      y_mn_cond = mean(y_mn_i),
-      y_sem_cond = sd(y_mn_i)/sqrt(N)
-    ) %>%
-    ungroup() %>%
-    mutate(i = max(x_agg_i$i) + 1)
+  x_agg_i <- aggregate_i(x)
+  x_agg_cond <- aggregate_cond(x_agg_i)
   ggplot(x_agg_i, aes(x1, y_mn_i)) +
     geom_line(aes(group = i, color = i)) +
     geom_line(
@@ -114,3 +99,26 @@ simulate_y <- function(df_design){
 }
 
 
+aggregate_i <- function(x){
+  x %>%
+    group_by(i, x1, x2) %>%
+    summarize(
+      n_trials = length(y),
+      y_mn_i = mean(y),
+      y_sem_i = sd(y)/sqrt(n_trials)
+    ) %>%
+    ungroup()
+}
+
+
+aggregate_cond <- function(x_agg_i){
+  x_agg_i %>%
+    group_by(x1, x2) %>%
+    summarize(
+      N = length(unique(i)),
+      y_mn_cond = mean(y_mn_i),
+      y_sem_cond = sd(y_mn_i)/sqrt(N)
+    ) %>%
+    ungroup() %>%
+    mutate(i = max(x_agg_i$i) + 1)
+}
