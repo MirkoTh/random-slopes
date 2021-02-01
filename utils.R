@@ -1,8 +1,13 @@
 condition_means <- function(mu, b1, b2, n_levels_1, n_levels_2){
   N <- length(mu)
-  C1 <- scale(seq(1, n_levels_1), center = TRUE, scale = TRUE) %>% 
+  # C1 <- scale(seq(1, n_levels_1), center = TRUE, scale = TRUE) %>%
+  #   as.matrix() %>% t()
+  # C2 <- scale(seq(1, n_levels_2), center = TRUE, scale = TRUE) %>%
+  #   as.matrix() %>% t()
+  
+  C1 <- rep(c(-.5, .5), n_levels_1)[1:n_levels_1] %>%
     as.matrix() %>% t()
-  C2 <- scale(seq(1, n_levels_2), center = TRUE, scale = TRUE) %>%
+  C2 <- rep(c(-.5, .5), n_levels_2)[1:n_levels_2] %>%
     as.matrix() %>% t()
   efs_1 <- array(rep(b1 %*% C1, n_levels_2), dim = c(N, n_levels_1, n_levels_2))
   efs_2 <- array(rep(b2 %*% C2, n_levels_1), dim = c(N, n_levels_2, n_levels_1))
@@ -58,6 +63,12 @@ plot_results <- function(x){
   n_expt <- x$n_expt[1]
   x_agg_i <- aggregate_i(x)
   x_agg_cond <- aggregate_cond(x_agg_i)
+  x_agg_i <- x_agg_i %>%
+    mutate(x1 = as.numeric(as.character(x1)),
+           x2 = as.numeric(as.character(x2)))
+  x_agg_cond <- x_agg_cond %>%
+    mutate(x1 = as.numeric(as.character(x1)),
+           x2 = as.numeric(as.character(x2)))
   ggplot(x_agg_i, aes(x1, y_mn_i)) +
     geom_line(aes(group = i, color = i)) +
     geom_line(
@@ -166,9 +177,14 @@ compare_models_bf <- function(tbl, agg){
 run_experiments <- function(l, tbl_design){
   l_simulation <- simulate_y(tbl_design)
   l_tbl_y <- l_simulation[["y"]]
+  tbl_b1 <- map(l_simulation[["b1"]], mean) %>% as_vector()
   l_bfs <- map(l_tbl_y, compare_models_bf, agg = TRUE)
   tbl_results <- tbl_design %>%
     select(-n_expt)
   tbl_results$bf <- as_vector(l_bfs)
-  return(tbl_results)
+  list_out <- list(
+    tbl_results = tbl_results,
+    tbl_b1 = tbl_b1
+  )
+  return(list_out)
 }
