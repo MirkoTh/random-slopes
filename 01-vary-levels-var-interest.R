@@ -62,6 +62,7 @@ tbl_results <- l_tbl_results %>%
 tbl_results$b1_sample_avg <- l_tbl_b1 %>% reduce(c)
 
 save(tbl_results, file = str_c("results-expt-sigma", length(sigma), "l.Rda"))
+
 load("2021-02-01-results-expt-sigma5l.Rda")
 
 tbl_results %>%
