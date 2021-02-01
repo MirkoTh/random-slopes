@@ -24,7 +24,8 @@ tbl_design$n_expt <- 1:nrow(tbl_design)
 
 # Simulate Data -----------------------------------------------------------
 
-l_tbl_y <- simulate_y(tbl_design)
+l_simulation <- simulate_y(tbl_design)
+l_tbl_y <- l_simulation[["y"]]
 
 # check simulated data visually
 suppressMessages(map(l_tbl_y, plot_results))
@@ -35,7 +36,7 @@ l_bfs <- map(l_tbl_y, compare_models_bf, agg = TRUE)
 
 # Experiment --------------------------------------------------------------
 
-n_expt <- 12
+n_expt <- 10
 l_expt <- 1:n_expt %>% as.list()
 
 # processing setup
@@ -44,11 +45,21 @@ n_cores_used <- n_cores_available - 2
 plan(multisession, workers = n_cores_used)
 
 # run workers
-l_tbl_results <- future_map(
-  l_expt, run_experiments, tbl_design = tbl_design,
-  .progress = TRUE
+suppressMessages(
+  l_tbl_results <- future_map(
+    l_expt, run_experiments, tbl_design = tbl_design,
+    .progress = TRUE, .options = furrr_options(seed = TRUE)
   )
+)
 
 # analyze results
 tbl_results <- l_tbl_results %>%
   reduce(rbind)
+
+save(tbl_results, file = "results-expt.Rda")
+
+tbl_results %>%
+  filter(bf >= 3) %>%
+  group_by(n_levels_1, sigma) %>%
+  count()
+tbl_design

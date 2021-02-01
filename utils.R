@@ -81,25 +81,33 @@ plot_results <- function(x){
 }
 
 
-simulate_y <- function(df_design){
-  b1 <- df_design[, c("N", "es_1", "sigma")] %>% 
+simulate_y <- function(tbl_design){
+  b1 <- tbl_design[, c("N", "es_1", "sigma")] %>% 
     rename(c("n" = "N", "mean" = "es_1", "sd" = "sigma")) %>%
     pmap(rnorm)
-  b2 <- df_design[, c("N", "es_2", "sigma")] %>%
+  b2 <- tbl_design[, c("N", "es_2", "sigma")] %>%
     rename(c("n" = "N", "mean" = "es_2", "sd" = "sigma")) %>%
     pmap(rnorm)
-  mu <- df_design[, c("N", "intercept", "sd" = "sigma")] %>%
+  mu <- tbl_design[, c("N", "intercept", "sd" = "sigma")] %>%
     rename(c("n" = "N", "mean" = "intercept", "sd" = "sigma")) %>%
     pmap(rnorm)
   m_cond <- pmap(list(
-    mu, b1, b2, df_design$n_levels_1, df_design$n_levels_2
+    mu, b1, b2, tbl_design$n_levels_1, tbl_design$n_levels_2
   ), .f=condition_means)
   l_tbl_m_cond <- map(m_cond, cond_means_tbl)
-  return(pmap(
+  y <- pmap(
     list(
-      l_tbl_m_cond, n_per_cond = df_design$n, n_expt = df_design$n_expt
+      l_tbl_m_cond, n_per_cond = tbl_design$n, n_expt = tbl_design$n_expt
     ), .f = sample_y
-  ))
+  )
+  list_out <- list(
+    b1 = b1,
+    b2 = b2,
+    mu = mu,
+    l_tbl_m_cond = l_tbl_m_cond,
+    y = y
+  )
+  return(list_out)
 }
 
 
@@ -156,7 +164,8 @@ compare_models_bf <- function(tbl, agg){
 
 
 run_experiments <- function(l, tbl_design){
-  l_tbl_y <- simulate_y(tbl_design)
+  l_simulation <- simulate_y(tbl_design)
+  l_tbl_y <- l_simulation[["y"]]
   l_bfs <- map(l_tbl_y, compare_models_bf, agg = TRUE)
   tbl_results <- tbl_design %>%
     select(-n_expt)
