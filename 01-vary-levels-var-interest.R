@@ -37,7 +37,7 @@ l_bfs <- map(l_tbl_y, compare_models_bf, agg = TRUE)
 
 # Experiment --------------------------------------------------------------
 
-n_expt <- 50
+n_expt <- 100
 l_expt <- 1:n_expt %>% as.list()
 
 # processing setup
@@ -78,4 +78,16 @@ tbl_results %>%
   labs(
     x = "Nr. Levels X1",
     y = "Proportion Bayes factors >= 3"
+  )
+
+ggplot(tbl_results, aes(b1_sample_avg, log10(bf))) +
+  geom_point(aes(color = n_levels_1), shape = 1) +
+  coord_cartesian(ylim = c(-3.5, 3.5)) +
+  facet_grid(sigma ~ n_levels_1) +
+  scale_color_viridis_c() +
+  theme_bw() +
+  theme(legend.title = element_blank()) +
+  labs(
+    x = "Sample Effect Size",
+    y = "log10(BF)"
   )
