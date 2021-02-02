@@ -29,7 +29,7 @@ l_simulation <- simulate_y(tbl_design)
 l_tbl_y <- l_simulation[["y"]]
 
 # check simulated data visually
-suppressMessages(map(l_tbl_y, plot_results))
+suppressMessages(map(l_tbl_y, plot_results, tbl_info = tbl_design))
 
 # Apply Models ------------------------------------------------------------
 

@@ -59,8 +59,9 @@ sample_entity <- function(ms, n){
 }
 
 
-plot_results <- function(x){
-  n_expt <- x$n_expt[1]
+plot_results <- function(x, tbl_info){
+  n_expt_ <- x$n_expt[1]
+  tbl_info <- tbl_info %>% filter(n_expt == n_expt_)
   x_agg_i <- aggregate_i(x)
   x_agg_cond <- aggregate_cond(x_agg_i)
   x_agg_i <- x_agg_i %>%
@@ -85,9 +86,13 @@ plot_results <- function(x){
     facet_wrap(~ x2) +
     theme_bw() +
     labs(
-      title = str_c("Experiment ", n_expt),
+      title = str_c("Experiment ", n_expt_),
       x = "X1",
-      y = "Y"
+      y = "Y",
+      caption = str_c(
+        "B1 = ", tbl_info$es_1, ", B2 = ", tbl_info$es_2,
+        ", sigma = ", tbl_info$sigma
+      )
     )
 }
 
