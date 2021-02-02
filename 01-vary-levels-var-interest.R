@@ -35,7 +35,7 @@ suppressMessages(map(l_tbl_y, plot_results, tbl_info = tbl_design))
 
 l_bfs <- map(l_tbl_y, compare_models_bf, agg = TRUE)
 
-# Experiment --------------------------------------------------------------
+# Run Experiments ---------------------------------------------------------
 
 n_expt <- 100
 l_expt <- 1:n_expt %>% as.list()
@@ -56,38 +56,43 @@ suppressMessages(
 l_tbl_results <- map(ls, 1)
 l_tbl_b1 <- map(ls, 2)
 
-# analyze results
 tbl_results <- l_tbl_results %>%
   reduce(rbind)
 tbl_results$b1_sample_avg <- l_tbl_b1 %>% reduce(c)
 
 save(tbl_results, file = str_c("results-expt-sigma", length(sigma), "l.Rda"))
 
+
+# Analyze Experiments -----------------------------------------------------
+
 load("2021-02-01-results-expt-sigma5l.Rda")
 
-tbl_results %>%
-  filter(bf >= 3) %>%
-  group_by(n_levels_1, sigma) %>%
-  count() %>%
-  ggplot(aes(n_levels_1, n/n_expt, group = sigma)) +
-  geom_line(aes(color = sigma)) +
-  geom_point(size = 3, color = "white") +
-  geom_point(aes(color = sigma)) +
-  scale_color_viridis_c() +
-  theme_bw() +
-  labs(
-    x = "Nr. Levels X1",
-    y = "Proportion Bayes factors >= 3"
-  )
+# BFs of FAs against Nr. Levels X1
+bfs_larger_equal_3(tbl_results)
 
-ggplot(tbl_results, aes(b1_sample_avg, log10(bf))) +
-  geom_point(aes(color = n_levels_1), shape = 1) +
-  coord_cartesian(ylim = c(-3.5, 3.5)) +
-  facet_grid(sigma ~ n_levels_1) +
-  scale_color_viridis_c() +
+# log10(BF) against Sample Effect Size
+bfs_against_sample_es(tbl_results)
+
+
+p_2 <- compare_models_bf2(l_tbl_y[[5]]) %>% as_tibble()
+p_10 <- compare_models_bf2(l_tbl_y[[15]]) %>% as_tibble()
+p_2 %>% 
+  select("x1-1", "sig2") %>%
+  pivot_longer(everything(), names_to = "Parameter", values_to = "Value") %>%
+  ggplot(aes(Value)) +
+  geom_density() +
+  facet_wrap(~ Parameter) +
   theme_bw() +
-  theme(legend.title = element_blank()) +
-  labs(
-    x = "Sample Effect Size",
-    y = "log10(BF)"
-  )
+  coord_cartesian(xlim = c(-1, 1), ylim = c(0, 10))
+
+p_10 %>% 
+  select("x1-1", "sig2") %>%
+  pivot_longer(everything(), names_to = "Parameter", values_to = "Value") %>%
+  ggplot(aes(Value)) +
+  geom_density() +
+  facet_wrap(~ Parameter) +
+  theme_bw() +
+  coord_cartesian(xlim = c(-1, 1), ylim = c(0, 10))
+
+
+

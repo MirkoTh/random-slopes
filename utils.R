@@ -178,6 +178,18 @@ compare_models_bf <- function(tbl, agg){
   return (exp(m_comp@bayesFactor$bf))
 }
 
+posterior_samples <- function(tbl){
+  tbl <- aggregate_i(tbl, f = TRUE)
+  names(tbl) <- c("i", "x1", "x2", "n_trials", "y", "y_sem")
+  m_bf_eff <- lmBF(
+    formula = y ~ x1 + x2 + i + i:x2, 
+    data = tbl %>% as.data.frame(),
+    whichRandom = "i"
+  )
+  p <- posterior(m_bf_eff, iterations = 5000)
+  return (p)
+}
+
 
 run_experiments <- function(l, tbl_design){
   l_simulation <- simulate_y(tbl_design)
@@ -192,4 +204,37 @@ run_experiments <- function(l, tbl_design){
     tbl_b1 = tbl_b1
   )
   return(list_out)
+}
+
+
+bfs_larger_equal_3 <- function(tbl_results){
+  tbl_results %>%
+    filter(bf >= 3) %>%
+    group_by(n_levels_1, sigma) %>%
+    count() %>%
+    ggplot(aes(n_levels_1, n/n_expt, group = sigma)) +
+    geom_line(aes(color = sigma)) +
+    geom_point(size = 3, color = "white") +
+    geom_point(aes(color = sigma)) +
+    scale_color_viridis_c() +
+    theme_bw() +
+    labs(
+      x = "Nr. Levels X1",
+      y = "Proportion Bayes factors >= 3"
+    )
+}
+
+
+bfs_against_sample_es <- function(tbl_results){
+  ggplot(tbl_results, aes(b1_sample_avg, log10(bf))) +
+    geom_point(aes(color = n_levels_1), shape = 1) +
+    coord_cartesian(ylim = c(-3.5, 3.5)) +
+    facet_grid(sigma ~ n_levels_1) +
+    scale_color_viridis_c() +
+    theme_bw() +
+    theme(legend.title = element_blank()) +
+    labs(
+      x = "Sample Effect Size",
+      y = "log10(BF)"
+    )
 }
