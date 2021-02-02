@@ -45,7 +45,7 @@ l_bfs <- map(l_m, 1)
 
 #### Iterate Over Several Experiments ####
 
-n_expt <- 10
+n_expt <- 100
 l_expt <- 1:n_expt %>% as.list()
 
 # processing setup

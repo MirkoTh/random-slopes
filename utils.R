@@ -255,8 +255,8 @@ measure_error_vs_x1 <- function(tbl_results){
     mutate(
       Parameter = factor(
         Parameter, labels = c(
-          "Measurement Error", "Precision Measurement Error", 
-          "Effect X1-1", "Precision Effect X1-1"
+          "Measurement Error", "SD Measurement Error", 
+          "Effect X1-1", "SD Effect X1-1"
         )
       )
     ) %>%
@@ -270,7 +270,8 @@ measure_error_vs_x1 <- function(tbl_results){
     theme(legend.title = element_blank()) +
     labs(
       x = "Nr. Levels X1",
-      y = "Effect"
+      y = "Effect",
+      caption = "Note. Range on Y-Axes differs between Panels"
     )
   
 }
