@@ -175,7 +175,10 @@ compare_models_bf <- function(tbl, agg){
     whichRandom = "i"
   )
   m_comp <- m_bf_eff / m_bf_no_eff
-  return (exp(m_comp@bayesFactor$bf))
+  bf <- exp(m_comp@bayesFactor$bf)
+  p <- posterior(m_bf_eff, iterations = 1000)
+  l_out <- list(bf = bf, p = p)
+  return (l_out)
 }
 
 posterior_samples <- function(tbl){
@@ -195,14 +198,28 @@ run_experiments <- function(l, tbl_design){
   l_simulation <- simulate_y(tbl_design)
   l_tbl_y <- l_simulation[["y"]]
   tbl_b1 <- map(l_simulation[["b1"]], mean) %>% as_vector()
-  l_bfs <- map(l_tbl_y, compare_models_bf, agg = TRUE)
+  l_m <- map(l_tbl_y, compare_models_bf, agg = TRUE)
+  l_bfs <- map(l_m, 1)
+  l_post <- map(l_m, 2)
   tbl_results <- tbl_design %>%
     select(-n_expt)
   tbl_results$bf <- as_vector(l_bfs)
+  tbl_post <- map(
+    l_post, function(x) {
+      as_tibble(x) %>% 
+      select("x1-1", "sig2") %>% 
+      summarize(
+        x1_1_mn = mean(`x1-1`),
+        x1_1_sd = sd(`x1-1`),
+        sig2_mn = mean(sig2),
+        sig2_sd = sd(sig2))
+      }
+    ) %>% reduce(rbind)
+  tbl_results <- cbind(tbl_results, tbl_post)
   list_out <- list(
     tbl_results = tbl_results,
     tbl_b1 = tbl_b1
-  )
+    )
   return(list_out)
 }
 
@@ -237,4 +254,35 @@ bfs_against_sample_es <- function(tbl_results){
       x = "Sample Effect Size",
       y = "log10(BF)"
     )
+}
+
+
+measure_error_vs_x1 <- function(tbl_results){
+  tbl_results %>%
+    select(n_levels_1, sigma, sig2_mn, sig2_sd, x1_1_mn, x1_1_sd) %>%
+    pivot_longer(
+      cols = c(sig2_mn, sig2_sd, x1_1_mn, x1_1_sd), 
+      names_to = "Parameter", values_to = "Value"
+    ) %>%
+    mutate(
+      Parameter = factor(
+        Parameter, labels = c(
+          "Measurement Error", "Precision Measurement Error", 
+          "Effect X1-1", "Precision Effect X1-1"
+        )
+      )
+    ) %>%
+    group_by(n_levels_1, sigma, Parameter) %>%
+    summarize(mn = mean(Value)) %>%
+    ggplot(aes(n_levels_1, mn, group = sigma)) +
+    geom_line(aes(color = sigma)) +
+    facet_wrap(~ Parameter, ncol = 2, scales = "free_y") +
+    scale_color_viridis_c() +
+    theme_bw() +
+    theme(legend.title = element_blank()) +
+    labs(
+      x = "Nr. Levels X1",
+      y = "Effect"
+    )
+  
 }
