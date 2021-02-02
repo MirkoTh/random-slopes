@@ -270,7 +270,8 @@ measure_error_vs_x1 <- function(tbl_results){
     theme(legend.title = element_blank()) +
     labs(
       x = "Nr. Levels X1",
-      y = "Effect"
+      y = "Effect",
+      caption = "Note. Range on Y-Axes differs between Panels"
     )
   
 }
