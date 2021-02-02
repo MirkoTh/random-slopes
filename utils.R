@@ -181,18 +181,6 @@ compare_models_bf <- function(tbl, agg){
   return (l_out)
 }
 
-posterior_samples <- function(tbl){
-  tbl <- aggregate_i(tbl, f = TRUE)
-  names(tbl) <- c("i", "x1", "x2", "n_trials", "y", "y_sem")
-  m_bf_eff <- lmBF(
-    formula = y ~ x1 + x2 + i + i:x2, 
-    data = tbl %>% as.data.frame(),
-    whichRandom = "i"
-  )
-  p <- posterior(m_bf_eff, iterations = 5000)
-  return (p)
-}
-
 
 run_experiments <- function(l, tbl_design){
   l_simulation <- simulate_y(tbl_design)
