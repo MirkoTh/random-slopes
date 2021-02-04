@@ -45,7 +45,7 @@ l_bfs <- map(l_m, 1)
 
 #### Iterate Over Several Experiments ####
 
-n_expt <- 100
+n_expt <- 2
 l_expt <- 1:n_expt %>% as.list()
 
 # processing setup
@@ -74,13 +74,12 @@ save(tbl_results, file = str_c(td, "-results-expt-sigma", length(sigma), "l.Rda"
 
 # Analyze Experiments -----------------------------------------------------
 
-load("2021-02-02-results-expt-sigma5l.Rda")
+load(str_c(td, "-results-expt-sigma5l.Rda"))
 
-# BFs of FAs against Nr. Levels X1
-bfs_larger_equal_3(tbl_results)
-
-# log10(BF) against Sample Effect Size
-bfs_against_sample_es(tbl_results)
-
-# measurement error & effect x1-1
-measure_error_vs_x1(tbl_results)
+tbl_pl_save <- tribble(
+  ~f,                    ~filename,                            ~w, ~h,
+  bfs_larger_equal_3,    "fas-against-levels_x1.png",          6,  4,
+  bfs_against_sample_es, "log10bf-against-sample_es.png",      10, 10,
+  measure_error_vs_x1,   "measurement_error-vs-effect_x1.png", 7,  4,
+)
+pwalk(tbl_pl_save, draw_and_save, tbl = tbl_results)

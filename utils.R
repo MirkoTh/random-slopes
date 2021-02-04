@@ -189,8 +189,9 @@ run_experiments <- function(l, tbl_design){
   l_m <- map(l_tbl_y, compare_models_bf, agg = TRUE)
   l_bfs <- map(l_m, 1)
   l_post <- map(l_m, 2)
-  tbl_results <- tbl_design %>%
-    select(-n_expt)
+  tbl_results <- tbl_design
+  # %>%
+  #   select(-n_expt)
   tbl_results$bf <- as_vector(l_bfs)
   tbl_post <- map(
     l_post, function(x) {
@@ -274,4 +275,12 @@ measure_error_vs_x1 <- function(tbl_results){
       caption = "Note. Range on Y-Axes differs between Panels"
     )
   
+}
+
+
+draw_and_save <- function(f, tbl, filename, w, h){
+  pl <- f(tbl)
+  png(filename, w, h, "in", res = 300)
+  grid::grid.draw(pl)
+  dev.off()
 }
